@@ -28,6 +28,9 @@ impl Shader {
     pub fn attach(&self, id: GLuint) {
         unsafe { gl::AttachShader(id, self.id) }
     }
+    pub fn detach(&self, id: GLuint) {
+        unsafe { gl::DetachShader(id, self.id) }
+    }
     pub fn delete(self) {
         unsafe { gl::DeleteShader(self.id) }
     }

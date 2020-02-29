@@ -2,18 +2,20 @@ use crate::types::shader::Shader;
 use gl::types::*;
 use std::ffi::CString;
 
-pub struct ShaderProgram<'a> {
+pub struct ShaderProgram {
     pub id: GLuint,
-    pub shaders: Vec<&'a Shader>,
 }
-impl<'a> ShaderProgram<'a> {
-    pub fn link(shaders: Vec<&'a Shader>) -> Result<Self, String> {
+impl ShaderProgram {
+    pub fn link(shaders: &[&Shader]) -> Result<Self, String> {
         unsafe {
             let id = gl::CreateProgram();
             for shader in shaders.iter() {
                 shader.attach(id);
             }
             gl::LinkProgram(id);
+            for shader in shaders.iter() {
+                shader.detach(id);
+            }
             let mut success = 1;
             gl::GetProgramiv(id, gl::LINK_STATUS, &mut success);
             if success == 0 {
@@ -23,7 +25,7 @@ impl<'a> ShaderProgram<'a> {
                 gl::GetProgramInfoLog(id, len, std::ptr::null_mut(), buffer.as_ptr() as *mut i8);
                 Err(CString::from_vec_unchecked(buffer).into_string().unwrap())
             } else {
-                Ok(ShaderProgram { id, shaders })
+                Ok(ShaderProgram { id })
             }
         }
     }
@@ -36,7 +38,7 @@ impl<'a> ShaderProgram<'a> {
         unsafe { gl::DeleteProgram(self.id) }
     }
 }
-impl<'a> Drop for ShaderProgram<'a> {
+impl Drop for ShaderProgram {
     fn drop(&mut self) {
         unsafe { gl::DeleteProgram(self.id) }
     }

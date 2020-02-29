@@ -42,7 +42,7 @@ fn main() {
     //Create shader
     let vertex_shader = Shader::from_source(vertex_shader_source, gl::VERTEX_SHADER).unwrap();
     let fragment_shader = Shader::from_source(fragment_shader_source, gl::FRAGMENT_SHADER).unwrap();
-    let shader_program = ShaderProgram::link(vec![&vertex_shader, &fragment_shader]).unwrap();
+    let shader_program = ShaderProgram::link([&vertex_shader, &fragment_shader].as_ref()).unwrap();
 
     //Create vertices
     let vertices: [f32; 12] = [
@@ -50,7 +50,7 @@ fn main() {
     ];
     let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
 
-    /*let mut vao = 0;
+    let mut vao = 0;
     let mut vbo = 0;
     let mut ebo = 0;
     unsafe {
@@ -82,14 +82,14 @@ fn main() {
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
     }
-    */
-    let (vao, vbo, ebo) = VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW)
+
+    /*let (vao, vbo, ebo) = VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW)
         .add_ebo(EBO::gen_buffer(), &indices, gl::STATIC_DRAW)
         .compile();
     let ebo = ebo.unwrap();
     println!("{}", vao.id);
     println!("{}", vbo.id);
-    println!("{}", ebo.id);
+    println!("{}", ebo.id);*/
     let mut wireframe = false;
     'main: loop {
         for event in event_pump.poll_iter() {
@@ -120,8 +120,8 @@ fn main() {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             shader_program.gl_use();
-            vao.bind();
-            //gl::BindVertexArray(vao);
+            //vao.bind();
+            gl::BindVertexArray(vao);
             gl::DrawElements(
                 gl::TRIANGLES,
                 indices.len() as i32,
@@ -132,5 +132,8 @@ fn main() {
 
         window.gl_swap_window();
     }
-    std::mem::drop(vao);
+    unsafe {
+        gl::DeleteVertexArrays(1, vao as *const u32);
+    }
+    //std::mem::drop(vao);
 }
