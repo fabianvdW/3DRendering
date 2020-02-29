@@ -2,14 +2,19 @@ extern crate gl;
 extern crate lib;
 extern crate sdl2;
 
+use lib::types::ebo::EBO;
+use lib::types::shader::Shader;
+use lib::types::shader_program::ShaderProgram;
+use lib::types::vao_builder::VAOBuilder;
+use lib::types::vbo::VBO;
 use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
-use std::ffi::{c_void, CString};
+use std::os::raw::c_void;
 
 fn main() {
-    let vertex_shader_source = CString::new(load_file("shaders/vertex_shader.glsl")).unwrap();
-    let fragment_shader_source = CString::new(load_file("shaders/fragment_shader.glsl")).unwrap();
+    let vertex_shader_source = load_file("shaders/vertex_shader.glsl");
+    let fragment_shader_source = load_file("shaders/fragment_shader.glsl");
 
     let sdl = sdl2::init().unwrap();
     let mut event_pump = sdl.event_pump().unwrap();
@@ -35,9 +40,9 @@ fn main() {
     }
 
     //Create shader
-    let vertex_shader = shader_from_source(&vertex_shader_source, gl::VERTEX_SHADER).unwrap();
-    let fragment_shader = shader_from_source(&fragment_shader_source, gl::FRAGMENT_SHADER).unwrap();
-    let shader_program = link_shaders(&[vertex_shader, fragment_shader]).unwrap();
+    let vertex_shader = Shader::from_source(vertex_shader_source, gl::VERTEX_SHADER).unwrap();
+    let fragment_shader = Shader::from_source(fragment_shader_source, gl::FRAGMENT_SHADER).unwrap();
+    let shader_program = ShaderProgram::link(vec![&vertex_shader, &fragment_shader]).unwrap();
 
     //Create vertices
     let vertices: [f32; 12] = [
@@ -45,7 +50,7 @@ fn main() {
     ];
     let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
 
-    let mut vao = 0;
+    /*let mut vao = 0;
     let mut vbo = 0;
     let mut ebo = 0;
     unsafe {
@@ -77,6 +82,14 @@ fn main() {
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
     }
+    */
+    let (vao, vbo, ebo) = VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW)
+        .add_ebo(EBO::gen_buffer(), &indices, gl::STATIC_DRAW)
+        .compile();
+    let ebo = ebo.unwrap();
+    println!("{}", vao.id);
+    println!("{}", vbo.id);
+    println!("{}", ebo.id);
     let mut wireframe = false;
     'main: loop {
         for event in event_pump.poll_iter() {
@@ -106,8 +119,9 @@ fn main() {
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::UseProgram(shader_program);
-            gl::BindVertexArray(vao);
+            shader_program.gl_use();
+            vao.bind();
+            //gl::BindVertexArray(vao);
             gl::DrawElements(
                 gl::TRIANGLES,
                 indices.len() as i32,
@@ -118,4 +132,5 @@ fn main() {
 
         window.gl_swap_window();
     }
+    std::mem::drop(vao);
 }
