@@ -6,12 +6,7 @@ pub type VBO = VertexBufferObject;
 pub struct VertexBufferObject {
     pub id: GLuint,
 }
-impl VertexBufferObject {
-    pub fn gen_buffer() -> Self {
-        let mut id = 0;
-        unsafe { gl::GenBuffers(1, &mut id) }
-        VertexBufferObject { id }
-    }
+impl VBO {
     pub fn bind(&self) {
         unsafe { gl::BindBuffer(gl::ARRAY_BUFFER, self.id) }
     }
@@ -32,7 +27,14 @@ impl VertexBufferObject {
         unsafe { gl::DeleteBuffers(1, &self.id) }
     }
 }
-impl Drop for VertexBufferObject {
+impl Default for VBO {
+    fn default() -> Self {
+        let mut id = 0;
+        unsafe { gl::GenBuffers(1, &mut id) }
+        VBO { id }
+    }
+}
+impl Drop for VBO {
     fn drop(&mut self) {
         unsafe { gl::DeleteBuffers(1, &self.id) }
     }

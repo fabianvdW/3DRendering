@@ -4,14 +4,7 @@ pub type VAO = VertexArrayObject;
 pub struct VertexArrayObject {
     pub id: GLuint,
 }
-impl VertexArrayObject {
-    pub fn gen_buffer() -> Self {
-        let mut id = 0;
-        unsafe {
-            gl::GenVertexArrays(1, &mut id);
-        }
-        VAO { id }
-    }
+impl VAO {
     pub fn bind(&self) {
         unsafe { gl::BindVertexArray(self.id) }
     }
@@ -22,7 +15,16 @@ impl VertexArrayObject {
         unsafe { gl::DeleteVertexArrays(1, &self.id) }
     }
 }
-impl Drop for VertexArrayObject {
+impl Default for VAO {
+    fn default() -> Self {
+        let mut id = 0;
+        unsafe {
+            gl::GenVertexArrays(1, &mut id);
+        }
+        VAO { id }
+    }
+}
+impl Drop for VAO {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.id);

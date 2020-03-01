@@ -15,14 +15,14 @@ pub struct VertexArrayObjectBuilder<'a> {
     pub ebo_data: Option<&'a [u32]>,
     pub ebo_draw_type: Option<GLenum>,
 }
-impl<'a> VertexArrayObjectBuilder<'a> {
+impl<'a> VAOBuilder<'a> {
     pub fn from_vbo(
         vbo: VBO,
         vbo_data: &'a [f32],
         vbo_draw_type: GLenum,
         data_layout: DataLayout,
     ) -> Self {
-        VertexArrayObjectBuilder {
+        VAOBuilder {
             vbo,
             vbo_data,
             vbo_draw_type,
@@ -39,7 +39,7 @@ impl<'a> VertexArrayObjectBuilder<'a> {
         self
     }
     pub fn compile(self) -> (VAO, VBO, Option<EBO>) {
-        let vao = VAO::gen_buffer();
+        let vao = VAO::default();
         vao.bind();
 
         self.vbo.bind();

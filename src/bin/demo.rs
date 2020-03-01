@@ -1,22 +1,30 @@
 extern crate gl;
+extern crate image;
 extern crate lib;
 extern crate sdl2;
 
+use gl::types::*;
+use image::GenericImageView;
 use lib::types::buffer::ebo::EBO;
 use lib::types::buffer::vao_builder::VAOBuilder;
 use lib::types::buffer::vbo::VBO;
 use lib::types::data::data_layout::DataLayout;
 use lib::types::shader::shader::Shader;
 use lib::types::shader::shader_program::ShaderProgram;
+use lib::types::shader::texture::Texture;
 use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use std::ffi::c_void;
 use std::time::SystemTime;
-
 fn main() {
     let vertex_shader_source = load_file("shaders/vertex_shader.glsl");
     let fragment_shader_source = load_file("shaders/fragment_shader.glsl");
+
+    let c_img = image::open("textures/container.jpg").unwrap();
+    let (c_w, c_h) = c_img.dimensions();
+    let s_img = image::open("textures/awesomeface.png").unwrap();
+    let (s_w, s_h) = s_img.dimensions();
 
     let sdl = sdl2::init().unwrap();
     let mut event_pump = sdl.event_pump().unwrap();
@@ -47,20 +55,47 @@ fn main() {
     let shader_program = ShaderProgram::link([&vertex_shader, &fragment_shader].as_ref()).unwrap();
     let horizontal_offset = shader_program.uniform_from_str("horizontalOffset").unwrap();
     let vertical_offset = shader_program.uniform_from_str("verticalOffset").unwrap();
+    let texture1 = shader_program.uniform_from_str("texture1").unwrap();
+    let texture2 = shader_program.uniform_from_str("texture2").unwrap();
+
+    //Create textures
+    let container = Texture::default();
+    container.bind(0);
+    unsafe {
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+    }
+    let data: Vec<u8> = c_img.into_rgb().into_vec();
+    container.tex_image2d(c_w, c_h, &data, gl::RGB);
+    container.generate_mipmap();
+    let smiley = Texture::default();
+    smiley.bind(0);
+    unsafe {
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+    }
+    let data: Vec<u8> = s_img.flipv().into_rgba().into_vec();
+    smiley.tex_image2d(s_w, s_h, &data, gl::RGBA);
+    smiley.generate_mipmap();
+    std::mem::drop(data);
+    shader_program.gl_use();
+    shader_program.uniform1i(&texture1, 0);
+    shader_program.uniform1i(&texture2, 1);
 
     //Create vertices
-    let vertices: [f32; 18] = [
-        // positions         // colors
-        0.5, -0.5, 0.0, 1.0, 0.0, 0.0, // bottom right
-        -0.5, -0.5, 0.0, 0.0, 1.0, 0.0, // bottom le t
-        0.0, 0.5, 0.0, 0.0, 0.0, 1.0, // top
+    let vertices: [f32; 32] = [
+        // positions          // colors           // texture coords
+        0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, // top right
+        0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom right
+        -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom left
+        -0.5, 0.5, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, // top left
     ];
-    let data_layout = DataLayout::infer_from_f32slice(&vertices, &[3], gl::FALSE, 3);
-    let indices: [u32; 3] = [0, 1, 2];
+    let data_layout = DataLayout::infer_from_f32slice(&vertices, &[3, 6], gl::FALSE, 4);
+    let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
 
     let (vao, _vbo, ebo) =
-        VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW, data_layout)
-            .add_ebo(EBO::gen_buffer(), &indices, gl::STATIC_DRAW)
+        VAOBuilder::from_vbo(VBO::default(), &vertices, gl::STATIC_DRAW, data_layout)
+            .add_ebo(EBO::default(), &indices, gl::STATIC_DRAW)
             .compile();
     let _ebo = ebo.unwrap();
 
@@ -94,6 +129,8 @@ fn main() {
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
+            container.bind(0);
+            smiley.bind(1);
             shader_program.gl_use();
             shader_program.uniform1f(
                 &horizontal_offset,
@@ -101,7 +138,7 @@ fn main() {
             );
             shader_program.uniform1f(
                 &vertical_offset,
-                (now.elapsed().unwrap().as_secs_f32() * 1.414).cos() / 2.,
+                (now.elapsed().unwrap().as_secs_f32() * 1.414).sin() / 2.,
             );
             vao.bind();
             gl::DrawElements(
