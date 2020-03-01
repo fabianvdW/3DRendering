@@ -48,7 +48,10 @@ impl ShaderProgram {
             Ok(Uniform { id })
         }
     }
-
+    pub fn uniform1f(&self, uniform: &Uniform, f1: f32) {
+        //TODO Design decision: Make sure shader program is active? Requires internal "active" field and mutability.
+        unsafe { gl::Uniform1f(uniform.id, f1) }
+    }
     pub fn uniform4f(&self, uniform: &Uniform, f1: f32, f2: f32, f3: f32, f4: f32) {
         //TODO Design decision: Make sure shader program is active? Requires internal "active" field and mutability.
         unsafe { gl::Uniform4f(uniform.id, f1, f2, f3, f4) }

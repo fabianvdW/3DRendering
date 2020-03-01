@@ -12,6 +12,7 @@ use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use std::ffi::c_void;
+use std::time::SystemTime;
 
 fn main() {
     let vertex_shader_source = load_file("shaders/vertex_shader.glsl");
@@ -44,7 +45,8 @@ fn main() {
     let vertex_shader = Shader::from_source(vertex_shader_source, gl::VERTEX_SHADER).unwrap();
     let fragment_shader = Shader::from_source(fragment_shader_source, gl::FRAGMENT_SHADER).unwrap();
     let shader_program = ShaderProgram::link([&vertex_shader, &fragment_shader].as_ref()).unwrap();
-    //let our_color_uniform = shader_program.uniform_from_str("ourColor").unwrap();
+    let horizontal_offset = shader_program.uniform_from_str("horizontalOffset").unwrap();
+    let vertical_offset = shader_program.uniform_from_str("verticalOffset").unwrap();
 
     //Create vertices
     let vertices: [f32; 18] = [
@@ -63,6 +65,7 @@ fn main() {
     let _ebo = ebo.unwrap();
 
     let mut wireframe = false;
+    let now = SystemTime::now();
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -92,6 +95,14 @@ fn main() {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             shader_program.gl_use();
+            shader_program.uniform1f(
+                &horizontal_offset,
+                now.elapsed().unwrap().as_secs_f32().sin() / 2.,
+            );
+            shader_program.uniform1f(
+                &vertical_offset,
+                (now.elapsed().unwrap().as_secs_f32() * 1.414).cos() / 2.,
+            );
             vao.bind();
             gl::DrawElements(
                 gl::TRIANGLES,
