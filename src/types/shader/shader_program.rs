@@ -1,4 +1,5 @@
-use crate::types::shader::Shader;
+use crate::types::shader::shader::Shader;
+use crate::types::shader::uniform::Uniform;
 use gl::types::*;
 use std::ffi::CString;
 
@@ -36,6 +37,21 @@ impl ShaderProgram {
 
     pub fn delete(self) {
         unsafe { gl::DeleteProgram(self.id) }
+    }
+
+    pub fn uniform_from_str(&self, s: &str) -> Result<Uniform, String> {
+        let cstr = CString::new(s).unwrap();
+        let id = unsafe { gl::GetUniformLocation(self.id, cstr.as_ptr()) };
+        if id == -1 {
+            Err("Uniform not found!".to_owned())
+        } else {
+            Ok(Uniform { id })
+        }
+    }
+
+    pub fn uniform4f(&self, uniform: &Uniform, f1: f32, f2: f32, f3: f32, f4: f32) {
+        //TODO Design decision: Make sure shader program is active? Requires internal "active" field and mutability.
+        unsafe { gl::Uniform4f(uniform.id, f1, f2, f3, f4) }
     }
 }
 impl Drop for ShaderProgram {

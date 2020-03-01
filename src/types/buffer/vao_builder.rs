@@ -1,6 +1,7 @@
-use crate::types::ebo::EBO;
-use crate::types::vao::VAO;
-use crate::types::vbo::VBO;
+use crate::types::buffer::ebo::EBO;
+use crate::types::buffer::vao::VAO;
+use crate::types::buffer::vbo::VBO;
+use crate::types::data::data_layout::DataLayout;
 use gl::types::*;
 
 pub type VAOBuilder<'a> = VertexArrayObjectBuilder<'a>;
@@ -9,16 +10,23 @@ pub struct VertexArrayObjectBuilder<'a> {
     pub vbo: VBO,
     pub vbo_data: &'a [f32],
     pub vbo_draw_type: GLenum,
+    pub data_layout: DataLayout,
     pub ebo: Option<EBO>,
     pub ebo_data: Option<&'a [u32]>,
     pub ebo_draw_type: Option<GLenum>,
 }
 impl<'a> VertexArrayObjectBuilder<'a> {
-    pub fn from_vbo(vbo: VBO, vbo_data: &'a [f32], vbo_draw_type: GLenum) -> Self {
+    pub fn from_vbo(
+        vbo: VBO,
+        vbo_data: &'a [f32],
+        vbo_draw_type: GLenum,
+        data_layout: DataLayout,
+    ) -> Self {
         VertexArrayObjectBuilder {
             vbo,
             vbo_data,
             vbo_draw_type,
+            data_layout,
             ebo: None,
             ebo_data: None,
             ebo_draw_type: None,
@@ -42,10 +50,7 @@ impl<'a> VertexArrayObjectBuilder<'a> {
             ebo.bind();
             ebo.buffer_data(self.ebo_data.unwrap(), self.ebo_draw_type.unwrap());
         }
-        unsafe {
-            gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * 4, std::ptr::null());
-            gl::EnableVertexAttribArray(0);
-        }
+        self.data_layout.vertex_attrib_pointer();
         vao.unbind();
         self.vbo.unbind();
         if self.ebo.is_some() {

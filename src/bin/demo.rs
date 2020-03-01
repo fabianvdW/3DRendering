@@ -2,14 +2,16 @@ extern crate gl;
 extern crate lib;
 extern crate sdl2;
 
-use lib::types::ebo::EBO;
-use lib::types::shader::Shader;
-use lib::types::shader_program::ShaderProgram;
-use lib::types::vao_builder::VAOBuilder;
-use lib::types::vbo::VBO;
+use lib::types::buffer::ebo::EBO;
+use lib::types::buffer::vao_builder::VAOBuilder;
+use lib::types::buffer::vbo::VBO;
+use lib::types::data::data_layout::DataLayout;
+use lib::types::shader::shader::Shader;
+use lib::types::shader::shader_program::ShaderProgram;
 use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
+use std::ffi::c_void;
 
 fn main() {
     let vertex_shader_source = load_file("shaders/vertex_shader.glsl");
@@ -32,7 +34,7 @@ fn main() {
     window.gl_set_context_to_current().unwrap();
 
     //Load OpenGL functions
-    gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
+    gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const c_void);
     //Set the viewport and color
     unsafe {
         gl::Viewport(0, 0, 900, 700);
@@ -42,17 +44,23 @@ fn main() {
     let vertex_shader = Shader::from_source(vertex_shader_source, gl::VERTEX_SHADER).unwrap();
     let fragment_shader = Shader::from_source(fragment_shader_source, gl::FRAGMENT_SHADER).unwrap();
     let shader_program = ShaderProgram::link([&vertex_shader, &fragment_shader].as_ref()).unwrap();
+    //let our_color_uniform = shader_program.uniform_from_str("ourColor").unwrap();
 
     //Create vertices
-    let vertices: [f32; 12] = [
-        0.5, 0.5, 0.0, 0.5, -0.5, 0.0, -0.5, -0.5, 0.0, -0.5, 0.5, 0.0,
+    let vertices: [f32; 18] = [
+        // positions         // colors
+        0.5, -0.5, 0.0, 1.0, 0.0, 0.0, // bottom right
+        -0.5, -0.5, 0.0, 0.0, 1.0, 0.0, // bottom le t
+        0.0, 0.5, 0.0, 0.0, 0.0, 1.0, // top
     ];
-    let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
+    let data_layout = DataLayout::infer_from_f32slice(&vertices, &[3], gl::FALSE, 3);
+    let indices: [u32; 3] = [0, 1, 2];
 
-    let (vao, vbo, ebo) = VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW)
-        .add_ebo(EBO::gen_buffer(), &indices, gl::STATIC_DRAW)
-        .compile();
-    let ebo = ebo.unwrap();
+    let (vao, _vbo, ebo) =
+        VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW, data_layout)
+            .add_ebo(EBO::gen_buffer(), &indices, gl::STATIC_DRAW)
+            .compile();
+    let _ebo = ebo.unwrap();
 
     let mut wireframe = false;
     'main: loop {
