@@ -13,6 +13,7 @@ impl EBO {
         unsafe { gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0) }
     }
     pub fn buffer_data(&self, indices: &[u32], draw_type: GLenum) {
+        debug_assert!([gl::STATIC_DRAW, gl::DYNAMIC_DRAW].contains(&draw_type));
         unsafe {
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,

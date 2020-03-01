@@ -7,6 +7,7 @@ pub struct Shader {
 }
 impl Shader {
     pub fn from_source(source: String, kind: GLenum) -> Result<Self, String> {
+        debug_assert!([gl::VERTEX_SHADER, gl::FRAGMENT_SHADER].contains(&kind));
         let source = CString::new(source).unwrap();
         unsafe {
             let id = gl::CreateShader(kind);

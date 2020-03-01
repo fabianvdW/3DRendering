@@ -14,6 +14,7 @@ impl VBO {
         unsafe { gl::BindBuffer(gl::ARRAY_BUFFER, 0) }
     }
     pub fn buffer_data(&self, vertices: &[f32], draw_type: GLenum) {
+        debug_assert!([gl::STATIC_DRAW, gl::DYNAMIC_DRAW].contains(&draw_type));
         unsafe {
             gl::BufferData(
                 gl::ARRAY_BUFFER,

@@ -88,7 +88,7 @@ impl TextureBuilder {
             unimplemented!("File ending is not implemented");
         };
 
-        let texture = Texture::default();
+        let texture = Texture::from_kind(self.kind);
         texture.bind(0);
         unsafe {
             gl::TexParameteri(self.kind, gl::TEXTURE_WRAP_S, self.texture_wrapping_s);
@@ -120,14 +120,14 @@ impl TextureBuilder {
             }
             gl::TexParameteri(self.kind, gl::TEXTURE_MIN_FILTER, self.texture_min_filter);
             gl::TexParameteri(self.kind, gl::TEXTURE_MAG_FILTER, self.texture_mag_filter);
-            if self.kind == gl::TEXTURE_2D {
-                texture.tex_image2d(img_w, img_h, &data, format);
-            } else {
-                unimplemented!("Currently, only 2D textures can be built");
-            }
-            if self.generate_mipmaps {
-                gl::GenerateMipmap(self.kind);
-            }
+        }
+        if self.kind == gl::TEXTURE_2D {
+            texture.tex_image2d(img_w, img_h, &data, format);
+        } else {
+            unimplemented!("Currently, only 2D textures can be built");
+        }
+        if self.generate_mipmaps {
+            texture.generate_mipmap();
         }
         Ok(texture)
     }

@@ -6,10 +6,22 @@ pub struct Texture {
     pub kind: GLenum,
 }
 impl Texture {
+    pub fn from_kind(kind: GLenum) -> Self {
+        let mut id: GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id);
+        }
+        Texture { id, kind }
+    }
     pub fn bind(&self, unit: u32) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + unit);
             gl::BindTexture(self.kind, self.id);
+        }
+    }
+    pub fn delete(self) {
+        unsafe {
+            gl::DeleteTextures(1, &self.id);
         }
     }
     pub fn tex_image2d(&self, width: GLuint, height: GLuint, data: &[u8], typ: GLenum) {
@@ -42,6 +54,13 @@ impl Default for Texture {
         Texture {
             id,
             kind: gl::TEXTURE_2D,
+        }
+    }
+}
+impl Drop for Texture {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteTextures(1, &self.id);
         }
     }
 }
