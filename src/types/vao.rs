@@ -19,15 +19,13 @@ impl VertexArrayObject {
         unsafe { gl::BindVertexArray(0) }
     }
     pub fn delete(self) {
-        unsafe { gl::DeleteVertexArrays(1, self.id as *const GLuint) }
+        unsafe { gl::DeleteVertexArrays(1, &self.id) }
     }
 }
 impl Drop for VertexArrayObject {
     fn drop(&mut self) {
-        println!("Dropping VAO!");
         unsafe {
-            gl::DeleteVertexArrays(1, self.id as *const GLuint);
+            gl::DeleteVertexArrays(1, &self.id);
         }
-        println!("Done Dropping VAO!");
     }
 }

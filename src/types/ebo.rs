@@ -28,13 +28,11 @@ impl ElementBufferObject {
         }
     }
     pub fn delete(self) {
-        unsafe { gl::DeleteBuffers(1, self.id as *const GLuint) }
+        unsafe { gl::DeleteBuffers(1, &self.id) }
     }
 }
 impl Drop for ElementBufferObject {
     fn drop(&mut self) {
-        println!("Dropping EBO");
-        unsafe { gl::DeleteBuffers(1, self.id as *const GLuint) }
-        println!("Done dropping EBO!");
+        unsafe { gl::DeleteBuffers(1, &self.id) }
     }
 }

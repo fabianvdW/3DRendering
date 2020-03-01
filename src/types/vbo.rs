@@ -29,13 +29,11 @@ impl VertexBufferObject {
         }
     }
     pub fn delete(self) {
-        unsafe { gl::DeleteBuffers(1, self.id as *const GLuint) }
+        unsafe { gl::DeleteBuffers(1, &self.id) }
     }
 }
 impl Drop for VertexBufferObject {
     fn drop(&mut self) {
-        println!("Dropping VBO");
-        unsafe { gl::DeleteBuffers(1, self.id as *const GLuint) }
-        println!("Done Dropping VBO");
+        unsafe { gl::DeleteBuffers(1, &self.id) }
     }
 }

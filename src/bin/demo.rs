@@ -10,7 +10,6 @@ use lib::types::vbo::VBO;
 use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
-use std::os::raw::c_void;
 
 fn main() {
     let vertex_shader_source = load_file("shaders/vertex_shader.glsl");
@@ -50,46 +49,11 @@ fn main() {
     ];
     let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
 
-    let mut vao = 0;
-    let mut vbo = 0;
-    let mut ebo = 0;
-    unsafe {
-        gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
-
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(
-            gl::ARRAY_BUFFER,
-            4 * vertices.len() as isize,
-            vertices.as_ptr() as *const c_void,
-            gl::STATIC_DRAW,
-        );
-
-        gl::GenBuffers(1, &mut ebo);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-        gl::BufferData(
-            gl::ELEMENT_ARRAY_BUFFER,
-            4 * indices.len() as isize,
-            indices.as_ptr() as *const c_void,
-            gl::STATIC_DRAW,
-        );
-
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * 4, std::ptr::null());
-        gl::EnableVertexAttribArray(0);
-
-        gl::BindVertexArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
-    }
-
-    /*let (vao, vbo, ebo) = VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW)
+    let (vao, vbo, ebo) = VAOBuilder::from_vbo(VBO::gen_buffer(), &vertices, gl::STATIC_DRAW)
         .add_ebo(EBO::gen_buffer(), &indices, gl::STATIC_DRAW)
         .compile();
     let ebo = ebo.unwrap();
-    println!("{}", vao.id);
-    println!("{}", vbo.id);
-    println!("{}", ebo.id);*/
+
     let mut wireframe = false;
     'main: loop {
         for event in event_pump.poll_iter() {
@@ -120,8 +84,7 @@ fn main() {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             shader_program.gl_use();
-            //vao.bind();
-            gl::BindVertexArray(vao);
+            vao.bind();
             gl::DrawElements(
                 gl::TRIANGLES,
                 indices.len() as i32,
@@ -132,8 +95,4 @@ fn main() {
 
         window.gl_swap_window();
     }
-    unsafe {
-        gl::DeleteVertexArrays(1, vao as *const u32);
-    }
-    //std::mem::drop(vao);
 }
