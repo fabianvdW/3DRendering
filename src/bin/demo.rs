@@ -55,14 +55,16 @@ fn main() {
     let shader_program = ShaderProgram::link([&vertex_shader, &fragment_shader].as_ref()).unwrap();
     let horizontal_offset = shader_program.uniform_from_str("horizontalOffset").unwrap();
     let vertical_offset = shader_program.uniform_from_str("verticalOffset").unwrap();
+    let texture0 = shader_program.uniform_from_str("texture0").unwrap();
     let texture1 = shader_program.uniform_from_str("texture1").unwrap();
-    let texture2 = shader_program.uniform_from_str("texture2").unwrap();
+    let mix_p = shader_program.uniform_from_str("mix_p").unwrap();
+    let mut mix_p_val = 0.2;
 
     //Create textures
     let container = Texture::default();
     container.bind(0);
     unsafe {
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
     }
     let data: Vec<u8> = c_img.into_rgb().into_vec();
@@ -71,7 +73,7 @@ fn main() {
     let smiley = Texture::default();
     smiley.bind(0);
     unsafe {
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
     }
     let data: Vec<u8> = s_img.flipv().into_rgba().into_vec();
@@ -79,16 +81,16 @@ fn main() {
     smiley.generate_mipmap();
     std::mem::drop(data);
     shader_program.gl_use();
-    shader_program.uniform1i(&texture1, 0);
-    shader_program.uniform1i(&texture2, 1);
+    shader_program.uniform1i(&texture0, 0);
+    shader_program.uniform1i(&texture1, 1);
 
     //Create vertices
     let vertices: [f32; 32] = [
         // positions          // colors           // texture coords
-        0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, // top right
-        0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom right
+        0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1., 1., // top right
+        0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1., 0.0, // bottom right
         -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom left
-        -0.5, 0.5, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, // top left
+        -0.5, 0.5, 0.0, 1.0, 1.0, 0.0, 0.0, 1., // top left
     ];
     let data_layout = DataLayout::infer_from_f32slice(&vertices, &[3, 6], gl::FALSE, 4);
     let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
@@ -121,6 +123,14 @@ fn main() {
                         );
                     }
                 }
+                Event::KeyDown {
+                    scancode: Some(Scancode::Up),
+                    ..
+                } => mix_p_val += 0.02,
+                Event::KeyDown {
+                    scancode: Some(Scancode::Down),
+                    ..
+                } => mix_p_val -= 0.02,
                 _ => {
                     housekeeping(event);
                 }
@@ -129,8 +139,6 @@ fn main() {
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            container.bind(0);
-            smiley.bind(1);
             shader_program.gl_use();
             shader_program.uniform1f(
                 &horizontal_offset,
@@ -140,6 +148,9 @@ fn main() {
                 &vertical_offset,
                 (now.elapsed().unwrap().as_secs_f32() * 1.414).sin() / 2.,
             );
+            shader_program.uniform1f(&mix_p, mix_p_val);
+            container.bind(0);
+            smiley.bind(1);
             vao.bind();
             gl::DrawElements(
                 gl::TRIANGLES,
