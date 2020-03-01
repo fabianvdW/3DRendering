@@ -3,28 +3,22 @@ extern crate image;
 extern crate lib;
 extern crate sdl2;
 
-use gl::types::*;
-use image::GenericImageView;
 use lib::types::buffer::ebo::EBO;
 use lib::types::buffer::vao_builder::VAOBuilder;
 use lib::types::buffer::vbo::VBO;
 use lib::types::data::data_layout::DataLayout;
 use lib::types::shader::shader::Shader;
 use lib::types::shader::shader_program::ShaderProgram;
-use lib::types::shader::texture::Texture;
+use lib::types::shader::texture_builder::TextureBuilder;
 use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use std::ffi::c_void;
 use std::time::SystemTime;
+
 fn main() {
     let vertex_shader_source = load_file("shaders/vertex_shader.glsl");
     let fragment_shader_source = load_file("shaders/fragment_shader.glsl");
-
-    let c_img = image::open("textures/container.jpg").unwrap();
-    let (c_w, c_h) = c_img.dimensions();
-    let s_img = image::open("textures/awesomeface.png").unwrap();
-    let (s_w, s_h) = s_img.dimensions();
 
     let sdl = sdl2::init().unwrap();
     let mut event_pump = sdl.event_pump().unwrap();
@@ -61,25 +55,12 @@ fn main() {
     let mut mix_p_val = 0.2;
 
     //Create textures
-    let container = Texture::default();
-    container.bind(0);
-    unsafe {
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
-    }
-    let data: Vec<u8> = c_img.into_rgb().into_vec();
-    container.tex_image2d(c_w, c_h, &data, gl::RGB);
-    container.generate_mipmap();
-    let smiley = Texture::default();
-    smiley.bind(0);
-    unsafe {
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
-    }
-    let data: Vec<u8> = s_img.flipv().into_rgba().into_vec();
-    smiley.tex_image2d(s_w, s_h, &data, gl::RGBA);
-    smiley.generate_mipmap();
-    std::mem::drop(data);
+    let container = TextureBuilder::default()
+        .compile("textures/container.jpg")
+        .unwrap();
+    let smiley = TextureBuilder::default()
+        .compile("textures/awesomeface.png")
+        .unwrap();
     shader_program.gl_use();
     shader_program.uniform1i(&texture0, 0);
     shader_program.uniform1i(&texture1, 1);
