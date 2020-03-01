@@ -1,3 +1,7 @@
+extern crate gl;
+extern crate image;
+extern crate sdl2;
+
 use sdl2::event::{Event, WindowEvent};
 
 pub mod types;

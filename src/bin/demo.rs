@@ -1,7 +1,4 @@
-extern crate gl;
-extern crate image;
 extern crate lib;
-extern crate sdl2;
 
 use lib::types::buffer::ebo::EBO;
 use lib::types::buffer::vao_builder::VAOBuilder;
@@ -25,7 +22,7 @@ fn main() {
     let video_subsystem = sdl.video().unwrap();
     let gl_attr = video_subsystem.gl_attr();
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    gl_attr.set_context_version(4, 5);
+    gl_attr.set_context_version(4, 6);
 
     let window = video_subsystem
         .window("3D Rendering", 900, 700)
@@ -83,6 +80,7 @@ fn main() {
     let _ebo = ebo.unwrap();
 
     let mut wireframe = false;
+
     let now = SystemTime::now();
     'main: loop {
         for event in event_pump.poll_iter() {
