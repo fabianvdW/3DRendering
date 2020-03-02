@@ -4,7 +4,6 @@ use lib::types::buffer::ebo::EBO;
 use lib::types::buffer::vao_builder::VAOBuilder;
 use lib::types::buffer::vbo::VBO;
 use lib::types::data::data_layout::DataLayout;
-use lib::types::linalg::dimension::Dimension;
 use lib::types::linalg::matrix::Matrix;
 use lib::types::shader::shader::Shader;
 use lib::types::shader::shader_program::ShaderProgram;
@@ -13,7 +12,6 @@ use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use std::ffi::c_void;
-use std::ops::Mul;
 use std::time::SystemTime;
 
 fn main() {
@@ -53,10 +51,10 @@ fn main() {
     let texture1 = shader_program.uniform_from_str("texture1").unwrap();
     let mix_p = shader_program.uniform_from_str("mix_p").unwrap();
     let transform = shader_program.uniform_from_str("transform").unwrap();
-    let transformation_matrix = Matrix::<f32>::translate4(0.4, -0.4, 0.0);
-    let transformation_matrix =
-        transformation_matrix.mul(Matrix::<f32>::rotate4(0., 0., 1.0, 90.0f32.to_radians()));
-    let transformation_matrix = transformation_matrix.mul(Matrix::<f32>::sscale4(0.5));
+    let transformation_matrix = Matrix::<f32>::identity4()
+        .translate4(0.4, -0.4, 0.0)
+        .rot90(0., 0., 1.0)
+        .sscale4(0.5);
     let mut mix_p_val = 0.2;
 
     //Create textures
