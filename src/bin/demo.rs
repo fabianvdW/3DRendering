@@ -1,19 +1,34 @@
 extern crate lib;
+extern crate rand;
 
 use lib::types::buffer::ebo::EBO;
 use lib::types::buffer::vao_builder::VAOBuilder;
 use lib::types::buffer::vbo::VBO;
 use lib::types::data::data_layout::DataLayout;
+use lib::types::linalg::dimension::Dimension;
+use lib::types::linalg::matrix::Matrix;
 use lib::types::shader::shader::Shader;
 use lib::types::shader::shader_program::ShaderProgram;
 use lib::types::shader::texture_builder::TextureBuilder;
 use lib::*;
+use rand::Rng;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use std::ffi::c_void;
-use std::time::SystemTime;
+use std::time::{Instant, SystemTime};
 
 fn main() {
+    let mut a = Vec::with_capacity(1440 * 1440);
+    let mut rng = rand::thread_rng();
+    for _ in 0..(1440 * 1440) {
+        a.push(rng.gen_range(0f32, 1f32));
+    }
+    let matrix = Matrix::from_data(a, Dimension::new(1440, 1440));
+    let mut output = Matrix::from_closure(|_| 0. as f32, Dimension::new(1440, 1440));
+    let now = Instant::now();
+    output.buffered_mul(&matrix, &matrix);
+    let millis = now.elapsed().as_millis() as f32 / 1000.;
+    println!("Took: {}", millis);
     let vertex_shader_source = load_file("shaders/vertex_shader.glsl");
     let fragment_shader_source = load_file("shaders/fragment_shader.glsl");
 
