@@ -1,3 +1,5 @@
+use crate::types::linalg::dimension::Dimension;
+use crate::types::linalg::matrix::Matrix;
 use crate::types::shader::shader::Shader;
 use crate::types::shader::uniform::Uniform;
 use gl::types::*;
@@ -59,6 +61,11 @@ impl ShaderProgram {
     pub fn uniform4f(&self, uniform: &Uniform, f1: f32, f2: f32, f3: f32, f4: f32) {
         //TODO Design decision: Make sure shader program is active? Requires internal "active" field and mutability.
         unsafe { gl::Uniform4f(uniform.id, f1, f2, f3, f4) }
+    }
+    pub fn uniform4fv(&self, uniform: &Uniform, mat: &Matrix<f32>) {
+        //TODO Design decision: Make sure shader program is active? Requires internal "active" field and mutability.
+        debug_assert!(mat.dimension == Dimension::new(4, 4));
+        unsafe { gl::Uniform4fv(uniform.id, 1, mat.as_ptr()) }
     }
 }
 impl Drop for ShaderProgram {

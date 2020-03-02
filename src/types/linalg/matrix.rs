@@ -1,11 +1,60 @@
 use crate::types::linalg::dimension::Dimension;
-use std::ops::{Add, AddAssign, Mul, Sub};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, PartialEq)]
 #[repr(C)]
 pub struct Matrix<T> {
     pub dimension: Dimension,
     pub data: Vec<T>,
+}
+impl Matrix<f32> {
+    pub fn zero4() -> Matrix<f32> {
+        Matrix::from_data(vec![0.; 16], Dimension::new(4, 4))
+    }
+    pub fn identity4() -> Matrix<f32> {
+        Matrix::from_data(
+            vec![
+                1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.,
+            ],
+            Dimension::new(4, 4),
+        )
+    }
+    pub fn scale4(s1: f32, s2: f32, s3: f32) -> Matrix<f32> {
+        let mut res = Matrix::identity4();
+        res.data[res.dimension.to_index(0, 0)] = s1;
+        res.data[res.dimension.to_index(1, 1)] = s2;
+        res.data[res.dimension.to_index(2, 2)] = s3;
+        res
+    }
+    pub fn sscale4(s: f32) -> Matrix<f32> {
+        Matrix::scale4(s, s, s)
+    }
+    pub fn translate4(t1: f32, t2: f32, t3: f32) -> Matrix<f32> {
+        let mut res = Matrix::identity4();
+        res.data[res.dimension.to_index(0, 3)] = t1;
+        res.data[res.dimension.to_index(1, 3)] = t2;
+        res.data[res.dimension.to_index(2, 3)] = t3;
+        res
+    }
+    pub fn ttranslate4(t: f32) -> Matrix<f32> {
+        Matrix::translate4(t, t, t)
+    }
+    pub fn rotate4(rx: f32, ry: f32, rz: f32, theta: f32) -> Matrix<f32> {
+        let mut res = Matrix::zero4();
+        let cos = theta.cos();
+        let sin = theta.sin();
+        res.data[res.dimension.to_index(0, 0)] = cos + rx * rx * (1.0 - cos);
+        res.data[res.dimension.to_index(0, 1)] = rx * ry * (1.0 - cos) - rz * sin;
+        res.data[res.dimension.to_index(0, 2)] = rx * rz * (1.0 - cos) + ry * sin;
+        res.data[res.dimension.to_index(1, 0)] = ry * rx * (1.0 - cos) + rz * sin;
+        res.data[res.dimension.to_index(1, 1)] = cos + ry * ry * (1.0 - cos);
+        res.data[res.dimension.to_index(1, 2)] = ry * rz * (1.0 - cos) - rx * sin;
+        res.data[res.dimension.to_index(2, 0)] = rz * rx * (1.0 - cos) - ry * sin;
+        res.data[res.dimension.to_index(2, 1)] = rz * ry * (1.0 - cos) + rx * sin;
+        res.data[res.dimension.to_index(2, 2)] = cos + rz * rz * (1.0 - cos);
+        res.data[res.dimension.to_index(3, 3)] = 1.;
+        res
+    }
 }
 impl<T: Copy> Matrix<T> {
     pub fn from_data(data: Vec<T>, dimension: Dimension) -> Self {
@@ -166,19 +215,13 @@ impl<'a, 'b, T: Mul<T, Output = T> + Add<T, Output = T> + Zero + Copy> Mul<&'a M
     }
 }
 //Matrix Matrix Buffered Multiplication
-impl<T: AddAssign + Mul<T, Output = T> + Add<T, Output = T> + Zero + Copy> Matrix<T> {
+impl<T: Mul<T, Output = T> + Add<T, Output = T> + Zero + Copy> Matrix<T> {
     pub fn buffered_mul(&mut self, m1: &Matrix<T>, m2: &Matrix<T>) {
-        assert_eq!(m1.dimension.columns, m2.dimension.rows);
-        assert!(
+        debug_assert_eq!(m1.dimension.columns, m2.dimension.rows);
+        debug_assert!(
             self.dimension.rows == m1.dimension.rows
                 && self.dimension.columns == m2.dimension.columns
         );
-        assert_eq!(
-            self.data.len(),
-            self.dimension.columns * self.dimension.rows
-        );
-        assert_eq!(m1.data.len(), m1.dimension.columns * m1.dimension.rows);
-        assert_eq!(m2.data.len(), m2.dimension.columns * m2.dimension.rows);
         let output_dimension = self.dimension;
         self.closure_into_buffer(|index| {
             let (row, colm) = output_dimension.to_xy(index);
