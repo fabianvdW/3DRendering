@@ -4,6 +4,8 @@ use lib::types::buffer::ebo::EBO;
 use lib::types::buffer::vao_builder::VAOBuilder;
 use lib::types::buffer::vbo::VBO;
 use lib::types::data::data_layout::DataLayout;
+use lib::types::linalg::dimension::Dimension;
+use lib::types::linalg::matrix::Matrix;
 use lib::types::shader::shader::Shader;
 use lib::types::shader::shader_program::ShaderProgram;
 use lib::types::shader::texture_builder::TextureBuilder;
@@ -11,6 +13,7 @@ use lib::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Scancode;
 use std::ffi::c_void;
+use std::ops::Mul;
 use std::time::SystemTime;
 
 fn main() {
@@ -49,6 +52,11 @@ fn main() {
     let texture0 = shader_program.uniform_from_str("texture0").unwrap();
     let texture1 = shader_program.uniform_from_str("texture1").unwrap();
     let mix_p = shader_program.uniform_from_str("mix_p").unwrap();
+    let transform = shader_program.uniform_from_str("transform").unwrap();
+    let transformation_matrix = Matrix::<f32>::translate4(0.4, -0.4, 0.0);
+    let transformation_matrix =
+        transformation_matrix.mul(Matrix::<f32>::rotate4(0., 0., 1.0, 90.0f32.to_radians()));
+    let transformation_matrix = transformation_matrix.mul(Matrix::<f32>::sscale4(0.5));
     let mut mix_p_val = 0.2;
 
     //Create textures
@@ -119,15 +127,16 @@ fn main() {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             shader_program.gl_use();
-            shader_program.uniform1f(
+            /*shader_program.uniform1f(
                 &horizontal_offset,
                 now.elapsed().unwrap().as_secs_f32().sin() / 2.,
             );
             shader_program.uniform1f(
                 &vertical_offset,
                 (now.elapsed().unwrap().as_secs_f32() * 1.414).sin() / 2.,
-            );
+            );*/
             shader_program.uniform1f(&mix_p, mix_p_val);
+            shader_program.uniform_matrix4fv(&transform, &transformation_matrix);
             container.bind(0);
             smiley.bind(1);
             vao.bind();

@@ -4,8 +4,8 @@ use std::ops::{Add, Mul, Sub};
 #[derive(Clone, PartialEq)]
 #[repr(C)]
 pub struct Matrix<T> {
-    pub dimension: Dimension,
     pub data: Vec<T>,
+    pub dimension: Dimension,
 }
 impl Matrix<f32> {
     pub fn zero4() -> Matrix<f32> {
