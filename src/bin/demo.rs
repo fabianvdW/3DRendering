@@ -1,5 +1,6 @@
 extern crate lib;
 
+use lib::setup::quick_setup::housekeeping;
 use lib::types::buffer::ebo::EBO;
 use lib::types::buffer::vao_builder::VAOBuilder;
 use lib::types::buffer::vbo::VBO;
@@ -125,14 +126,14 @@ fn main() {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             shader_program.gl_use();
-            /*shader_program.uniform1f(
+            shader_program.uniform1f(
                 &horizontal_offset,
                 now.elapsed().unwrap().as_secs_f32().sin() / 2.,
             );
             shader_program.uniform1f(
                 &vertical_offset,
                 (now.elapsed().unwrap().as_secs_f32() * 1.414).sin() / 2.,
-            );*/
+            );
             shader_program.uniform1f(&mix_p, mix_p_val);
             shader_program.uniform_matrix4fv(&transform, &transformation_matrix);
             container.bind(0);

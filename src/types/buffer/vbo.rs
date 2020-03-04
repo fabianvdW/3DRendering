@@ -24,6 +24,11 @@ impl VBO {
             )
         }
     }
+    pub fn buffer_sub_data(&self, vertices: &[f32]){
+        unsafe{
+            gl::BufferSubData(gl::ARRAY_BUFFER, 0, vertices.len() as isize * 4, vertices.as_ptr() as *const c_void)
+        }
+    }
     pub fn delete(self) {
         unsafe { gl::DeleteBuffers(1, &self.id) }
     }

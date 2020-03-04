@@ -19,3 +19,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "demo"
 path = "src/bin/demo.rs"
+[[bin]]
+name = "sierpinski_demo_cpu"
+path = "src/bin/sierpinski_demo_cpu.rs"
