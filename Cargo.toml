@@ -22,3 +22,6 @@ path = "src/bin/demo.rs"
 [[bin]]
 name = "sierpinski_demo_cpu"
 path = "src/bin/sierpinski_demo_cpu.rs"
+[[bin]]
+name = "sierpinski_demo_gpu"
+path = "src/bin/sierpinski_demo_gpu.rs"

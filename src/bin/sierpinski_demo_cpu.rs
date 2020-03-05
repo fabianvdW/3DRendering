@@ -13,9 +13,9 @@ use lib::types::shader::shader::Shader;
 use lib::types::shader::shader_program::ShaderProgram;
 use std::time::SystemTime;
 
-pub const SIERPINSKI_DEPTH: usize = 10;
+pub const SIERPINSKI_DEPTH: usize = 9;
 pub fn main() {
-    let demo = initialize_demo("Sierpinski Cpu", Dimension::new(900, 700));
+    let demo = initialize_demo("Sierpinski CPU", Dimension::new(900, 700));
     let vertex_shader = Shader::from_source(
         load_file("shaders/sierpinski_cpu_vertex.glsl"),
         gl::VERTEX_SHADER,
